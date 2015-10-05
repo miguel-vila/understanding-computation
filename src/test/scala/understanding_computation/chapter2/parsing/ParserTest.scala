@@ -74,10 +74,10 @@ class ParserTest extends FlatSpec with Matchers {
   }
 
   it should "identify assignments" in {
-    parseAll(assign, "foo=1").get should be(Assign("foo", Number(1)))
-    parseAll(assign, "foo=bar+1").get should be(Assign("foo", Add(Variable.Number("bar"), Number(1))))
-    //parseAll(assign, "foo=bar").get
-    parseAll(assign, " foo = 1 ").get should be(Assign("foo", Number(1)))
+    parseAll(assign, "foo=1;").get should be(Assign("foo", Number(1)))
+    parseAll(assign, "foo=bar+1;").get should be(Assign("foo", Add(Variable.Number("bar"), Number(1))))
+    //parseAll(assign, "foo=bar;").get
+    parseAll(assign, " foo = 1 ;").get should be(Assign("foo", Number(1)))
   }
 
   it should "identify if statements" in {
@@ -85,8 +85,8 @@ class ParserTest extends FlatSpec with Matchers {
       "if( 1 < 3){foo = 1;}else{bar = 2;}"
     ).get should be (If(
       LessThan(Number(1),Number(3)),
-      Sequence(Assign("foo", Number(1))),
-      Sequence(Assign("bar", Number(2)))
+      Assign("foo", Number(1)),
+      Assign("bar", Number(2))
     ))
     parseAll(_if,
       """if( 1 < 3){
@@ -96,37 +96,83 @@ class ParserTest extends FlatSpec with Matchers {
         |}""".stripMargin
     ).get should be (If(
       LessThan(Number(1),Number(3)),
-      Sequence(Assign("foo", Number(1))),
-      Sequence(Assign("bar", Number(2)))
+      Assign("foo", Number(1)),
+      Assign("bar", Number(2))
     ))
-    parseAll(_if,
+    val r = parseAll(_if,
       """if( 1 < 3) {
         | foo = 1;
         |} else {
         | bar = 2;
         | baz = 3;
-        |}""".stripMargin
-    ).get should be (If(
+        |}
+        |""".stripMargin
+    )
+    println(s" r = $r")
+    r.get should be (If(
       LessThan(Number(1),Number(3)),
-      Sequence(Assign("foo", Number(1))),
+      Assign("foo", Number(1)),
       Sequence(
         Assign("bar", Number(2)),
         Assign("baz", Number(3)))
     ))
   }
 
+  it should "identify 'while' statements" in {
+    parseAll(_while,
+      """
+        |while(foo < 2){
+        | foo = foo + 1;
+        |}
+      """.stripMargin
+    ).get should be (
+      While(
+        LessThan(Variable.Number("foo"), Number(2)),
+        Assign("foo", Add(Variable.Number("foo"), Number(1)))))
+    parseAll(_while,
+      """
+        |while(foo < 2){
+        | foo = foo + 1;
+        | baz = foo + 7;
+        |}
+      """.stripMargin
+    ).get should be (
+      While(
+        LessThan(Variable.Number("foo"), Number(2)),
+          Sequence(
+            Assign("foo", Add(Variable.Number("foo"), Number(1))),
+            Assign("baz", Add(Variable.Number("foo"), Number(7))))))
+  }
+
   it should "identify sequences" in {
-    parseAll(sequence,"foo = 1; bar = 3;").get should be (Sequence(Assign("foo",Number(1)),Assign("bar",Number(3))))
-    parseAll(sequence,
+    parseAll(voidExpression,"foo = 1; bar = 3;").get should be (Sequence(Assign("foo",Number(1)),Assign("bar",Number(3))))
+    parseAll(voidExpression,
       """foo = 1;
         |bar = 3;""".stripMargin
     ).get should be (Sequence(Assign("foo",Number(1)),Assign("bar",Number(3))))
-    parseAll(sequence,
+    parseAll(voidExpression,
       """foo = 1;
         |bar = 3;
         |fuz = 4;
       """.stripMargin
     ).get should be (Sequence(Assign("foo",Number(1)),Assign("bar",Number(3)),Assign("fuz",Number(4))))
+    parseAll(voidExpression,
+      """foo = 1;
+        |if( foo < 3 ) {
+        | foo = foo +5;
+        |} else {
+        | bar = 4;
+        |}
+        |fuz = 4;
+      """.stripMargin
+    ).get should be (Sequence(
+      Assign("foo",Number(1)),
+      If(
+        LessThan(Variable.Number("foo"),Number(3)),
+        Assign("foo", Add(Variable.Number("foo"), Number(5))),
+        Assign("bar", Number(4))
+      ),
+      Assign("fuz",Number(4))))
   }
 
 }

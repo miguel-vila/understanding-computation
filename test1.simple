@@ -1,0 +1,4 @@
+foo = 1;
+while ( foo < 100 ) {
+    foo = foo * 3;
+}
