@@ -79,14 +79,61 @@ class InterpreterTest(interpreter: Interpreter) extends FlatSpec with Matchers {
     newEnv should be (Map("foo"->NumberValue(12),"bar"->NumberValue(56)))
   }
 
-  it should "evaluate while expressions" in {
+  it should "evaluate while expressions (1)" in {
     val env = Map("foo"->NumberValue(0))
     val (newEnv,_) = evaluateWithEnvironment(env,
-      While(
-        LessThan(Variable.Number("foo"), Number(2)),
+      While(LessThan(Variable.Number("foo"), Number(2)),
         Assign("foo", Add(Variable.Number("foo"), Number(1)))
-      ))
+      )
+    )
+    newEnv should be (Map("foo" -> NumberValue(2)))
+  }
 
+  it should "evaluate while expressions (2)" in {
+    val (newEnv,_) = evaluateWithEnvironment(Map.empty,
+      Sequence(
+        Assign("foo", Number(0)),
+        While(LessThan(Variable.Number("foo"), Number(2)),
+          Assign("foo", Add(Variable.Number("foo"), Number(1)))
+        )
+      )
+    )
+    newEnv should be (Map("foo" -> NumberValue(2)))
+  }
+
+  it should "evaluate while expressions (3)" in {
+    val (newEnv,_) = evaluateWithEnvironment(Map.empty,
+      Sequence(
+        Assign("foo", Number(0)),
+        Assign("bar", Number(1)),
+        While(LessThan(Variable.Number("foo"), Number(5)),
+          Sequence(
+            Assign("foo", Add(Variable.Number("foo"), Number(1))),
+            Assign("bar", Add(Variable.Number("bar"), Number(2)))
+          )
+        )
+      )
+    )
+    newEnv should be (Map("foo" -> NumberValue(5), "bar" -> NumberValue(11)))
+  }
+
+  it should "evaluate while expressions (4)" in {
+    val (newEnv,_) = evaluateWithEnvironment(Map.empty,
+      Sequence(
+        Assign("foo", Number(0)),
+        Assign("bar", Number(1)),
+        While(LessThan(Variable.Number("foo"), Number(5)),
+          Sequence(
+            Assign("foo", Add(Variable.Number("foo"), Number(1))),
+            If(LessThan(Variable.Number("foo"), Number(3)),
+              Assign("bar", Add(Variable.Number("bar"), Number(1))),
+              Assign("bar", Add(Add(Variable.Number("bar"), Variable.Number("foo")), Number(2)))
+            )
+          )
+        )
+      )
+    )
+    newEnv should be (Map("foo" -> NumberValue(5), "bar" -> NumberValue(21)))
   }
 
   it should "evaluate sequences of expressions (1)" in {
