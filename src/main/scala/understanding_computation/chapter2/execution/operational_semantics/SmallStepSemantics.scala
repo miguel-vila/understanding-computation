@@ -109,7 +109,7 @@ object SmallStepSemantics extends Interpreter {
   }
 
   def reduceNumberExpression(numberExpression: NumberExpression, environment: Environment): NumberExpression = numberExpression match {
-    case NumberVariable(name)             => Number( environment(name).asInstanceOf[NumberValue] )
+    case NumberVariable(name)             => Number(environment(name).asInstanceOf[NumberValue])
     case binaryOp: BinaryOp               => reduceBinaryOp(binaryOp, environment)
     case number: Number                   => number
   }

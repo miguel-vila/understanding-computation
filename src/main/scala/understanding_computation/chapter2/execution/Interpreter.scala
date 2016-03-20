@@ -10,7 +10,7 @@ import Parser.{ Success, NoSuccess }
 
 trait Interpreter {
   def evaluate[T<:Value](expression: Expression[T]): T = {
-    val (_, result) = evaluateWithEnvironment(Map.empty, expression)
+    val (_, result) = evaluateWithEnvironment( Map.empty, expression)
     result
   }
   def evaluateWithEnvironment[T<:Value](environment: Environment, expression: Expression[T]): (Environment,T)

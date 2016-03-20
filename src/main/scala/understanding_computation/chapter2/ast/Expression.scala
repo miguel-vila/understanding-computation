@@ -17,9 +17,10 @@ case object DoNothing extends VoidExpression with Literal[Void.type] {
 }
 case class Assign(name: String, expression: Expression[_<:Value]) extends VoidExpression {
   val evaluator: Evaluator[Void.type] =
-    expression.evaluator.flatMap { v =>
-      State[Environment, Void.type](s => (s + ((name, v)), Void))
-    }
+    for {
+      value <- expression.evaluator
+      _     <- State.modify { s: Environment => s + (name -> value) }
+    } yield Void
 }
 
 sealed trait BooleanExpression extends Expression[BooleanValue]
@@ -67,22 +68,27 @@ case class While(condition: BooleanExpression, body: VoidExpression) extends Voi
   val evaluator: Evaluator[Void.type] = {
     lazy val bodyEvaluator = body.evaluator
     val conditionEvaluator = condition.evaluator
-    def loop(): Evaluator[Void.type] = {
+    lazy val loop: Evaluator[Void.type] = {
       conditionEvaluator.flatMap { condition =>
         if(condition.value) {
           bodyEvaluator.flatMap { _=>
-            loop()
+            loop
           }
         } else {
           State.state( Void )
         }
       }
     }
-    loop()
+    loop
   }
 }
 case class Sequence(exps: VoidExpression*) extends VoidExpression {
-  val evaluator: Evaluator[Void.type] = Traverse[List].sequenceU( exps.map(_.evaluator).toList ) map { _ => Void }
+
+  val evaluator: Evaluator[Void.type] =
+    for {
+      _ <- Traverse[List].traverseS_( exps.toList ) (_.evaluator)
+    } yield Void
+
 }
 
 sealed trait BinaryOp extends NumberExpression {
