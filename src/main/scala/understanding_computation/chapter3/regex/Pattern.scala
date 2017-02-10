@@ -2,7 +2,7 @@ package understanding_computation.chapter3.regex
 
 import understanding_computation.chapter3._
 
-trait Pattern {
+sealed trait Pattern {
 
   def precedence: Int
 
@@ -29,6 +29,8 @@ case object Empty extends Pattern {
 
     NFADesign(startState, acceptStates, rules)
   }
+
+  override def toString = "''"
 
 }
 
@@ -64,7 +66,7 @@ case class Concatenate(first: Pattern, second: Pattern) extends Pattern {
     val rules = nfa1.rules.values ++ nfa2.rules.values
     val extraRules = nfa1.acceptingStates.map { state =>
       NFARule.freeMove(state, nfa2.initialState)
-    }
+    } + NFARule.freeMove(startState, nfa1.initialState)
 
     NFADesign(startState, nfa2.acceptingStates, NFARulebook(rules ++ extraRules))
   }
@@ -74,7 +76,7 @@ case class Choose(first: Pattern, second: Pattern) extends Pattern {
 
   def precedence = 0
 
-  override def toString(): String = s"${first.bracket(precedence)}${second.bracket(precedence)}"
+  override def toString(): String = s"${first.bracket(precedence)}|${second.bracket(precedence)}"
 
   def toNFADesign: NFADesign = {
     val startState = StateGenerator.generate()
@@ -103,7 +105,7 @@ case class Repeat(pattern: Pattern) extends AnyRef with Pattern {
 
     val extraRules = nfa.acceptingStates.map { st =>
       NFARule.freeMove(st, nfa.initialState)
-    }
+    } + NFARule.freeMove(startState, nfa.initialState)
 
     NFADesign(startState, acceptingStates, NFARulebook(nfa.rules.values ++ extraRules))
   }
