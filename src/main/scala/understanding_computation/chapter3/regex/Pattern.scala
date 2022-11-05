@@ -18,7 +18,7 @@ sealed trait Pattern {
 
 }
 
-case object Empty extends Pattern {
+case object EmptyRegex extends Pattern {
 
   def precedence = 3
 

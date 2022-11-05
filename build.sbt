@@ -24,8 +24,8 @@ scalacOptions ++= Seq(
 )
 
 resolvers ++= Seq(
-    "Sonatype Releases"   at "http://oss.sonatype.org/content/repositories/releases",
-    "Sonatype Snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots"
+    "Sonatype Releases"   at "https://oss.sonatype.org/content/repositories/releases",
+    "Sonatype Snapshots"  at "https://oss.sonatype.org/content/repositories/snapshots"
 )
 
 val scalazV = "7.1.0"

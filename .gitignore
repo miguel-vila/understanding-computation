@@ -6,3 +6,7 @@ target
 *application.conf
 .idea
 .idea_modules
+.ensime_cache/
+.bsp
+project/metals.sbt
+project/.bloop
